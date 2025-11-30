@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { MediaGrid } from '@/components/MediaGrid';
+import { ImageViewer } from '@/components/ImageViewer';
+import { MenuSheet } from '@/components/MenuSheet';
+import { SettingsSheet } from '@/components/SettingsSheet';
 
 type MediaType = 'image' | 'video' | 'folder';
 
@@ -248,177 +247,46 @@ const Index = () => {
               </>
             )}
 
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Icon name="Menu" size={24} />
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-80">
-                <SheetHeader>
-                  <SheetTitle>Меню</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-2 mt-6">
-                  <Button
-                    variant="ghost"
-                    className="justify-start"
-                    disabled={selectedItems.size !== 1}
-                    onClick={() => setExifDialogOpen(true)}
-                  >
-                    <Icon name="Info" size={20} className="mr-2" />
-                    Показать EXIF
-                  </Button>
-                  <Button variant="ghost" className="justify-start">
-                    <Icon name="Play" size={20} className="mr-2" />
-                    Слайдшоу (текущая папка)
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start"
-                    disabled={selectedItems.size === 0}
-                  >
-                    <Icon name="PlaySquare" size={20} className="mr-2" />
-                    Слайдшоу (выбранные)
-                  </Button>
-                  <Separator className="my-2" />
-                  <Button
-                    variant="ghost"
-                    className="justify-start"
-                    disabled={selectedItems.size === 0}
-                  >
-                    <Icon name="Copy" size={20} className="mr-2" />
-                    Копировать выбранные
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start"
-                    disabled={selectedItems.size === 0}
-                  >
-                    <Icon name="FolderInput" size={20} className="mr-2" />
-                    Переместить выбранные
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-destructive"
-                    disabled={selectedItems.size === 0}
-                  >
-                    <Icon name="Trash2" size={20} className="mr-2" />
-                    Удалить выбранные
-                  </Button>
-                  <Separator className="my-2" />
-                  <Button variant="ghost" className="justify-start" onClick={() => {
-                    setMenuOpen(false);
-                    setSettingsOpen(true);
-                  }}>
-                    <Icon name="Settings" size={20} className="mr-2" />
-                    Настройки
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)}>
+              <Icon name="Menu" size={24} />
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {mediaItems.map((item) => (
-            <div
-              key={item.id}
-              className={`group relative cursor-pointer transition-all hover:scale-105 ${
-                selectedItems.has(item.id) ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => handleItemClick(item)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleLongPress(item.id);
-              }}
-            >
-              <div
-                className="relative bg-card border border-border rounded-lg overflow-hidden"
-                style={{
-                  paddingBottom: `${(1 / item.aspectRatio) * 100}%`,
-                }}
-              >
-                {item.type === 'folder' ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-                    <Icon name="Folder" size={48} className="text-primary" />
-                  </div>
-                ) : (
-                  <>
-                    <img
-                      src={item.thumbnail}
-                      alt={item.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    {item.type === 'video' && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <Icon name="PlayCircle" size={48} className="text-white" />
-                      </div>
-                    )}
-                  </>
-                )}
-                {selectedItems.has(item.id) && (
-                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <Icon name="Check" size={16} className="text-primary-foreground" />
-                  </div>
-                )}
-              </div>
-              {(settings.showFileNames || item.type === 'folder') && (
-                <p className="mt-2 text-sm text-foreground truncate">{item.name}</p>
-              )}
-            </div>
-          ))}
-        </div>
+        <MediaGrid
+          mediaItems={mediaItems}
+          selectedItems={selectedItems}
+          showFileNames={settings.showFileNames}
+          onItemClick={handleItemClick}
+          onLongPress={handleLongPress}
+        />
       </main>
 
-      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-full h-full p-0 bg-black">
-          {currentImage && (
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img
-                src={currentImage.thumbnail}
-                alt={currentImage.name}
-                className="max-w-full max-h-full object-contain"
-                style={{ transform: `scale(${zoomLevel})` }}
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-card/90 backdrop-blur rounded-full px-4 py-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleZoom(-0.5)}
-                  disabled={zoomLevel <= 1}
-                >
-                  <Icon name="ZoomOut" size={20} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleZoom(0.5)}
-                  disabled={zoomLevel >= 5}
-                >
-                  <Icon name="ZoomIn" size={20} />
-                </Button>
-                <Separator orientation="vertical" className="h-auto" />
-                <Button variant="ghost" size="icon" onClick={() => handleSwipeMove('up')}>
-                  <Icon name="ArrowUp" size={20} />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleSwipeMove('down')}>
-                  <Icon name="ArrowDown" size={20} />
-                </Button>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 bg-card/90 backdrop-blur"
-                onClick={() => setViewerOpen(false)}
-              >
-                <Icon name="X" size={24} />
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ImageViewer
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        currentImage={currentImage}
+        zoomLevel={zoomLevel}
+        onZoom={handleZoom}
+        onSwipeMove={handleSwipeMove}
+      />
+
+      <MenuSheet
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        selectedItemsCount={selectedItems.size}
+        onShowExif={() => setExifDialogOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+
+      <SettingsSheet
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={settings}
+        onSettingsChange={setSettings}
+      />
 
       <Dialog open={exifDialogOpen} onOpenChange={setExifDialogOpen}>
         <DialogContent className="max-w-md">
@@ -437,149 +305,6 @@ const Index = () => {
           )}
         </DialogContent>
       </Dialog>
-
-      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Настройки</SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
-            <div className="space-y-6 pr-4">
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Отображение</h3>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-video">Показывать видео</Label>
-                  <Switch
-                    id="show-video"
-                    checked={settings.showVideoFiles}
-                    onCheckedChange={(checked) =>
-                      setSettings({ ...settings, showVideoFiles: checked })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-names">Показывать имена файлов</Label>
-                  <Switch
-                    id="show-names"
-                    checked={settings.showFileNames}
-                    onCheckedChange={(checked) =>
-                      setSettings({ ...settings, showFileNames: checked })
-                    }
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Сортировка</h3>
-                <div className="space-y-2">
-                  <Label>Сортировать по</Label>
-                  <Select
-                    value={settings.sortBy}
-                    onValueChange={(value: any) =>
-                      setSettings({ ...settings, sortBy: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Имени</SelectItem>
-                      <SelectItem value="date">Дате</SelectItem>
-                      <SelectItem value="path">Пути</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Порядок</Label>
-                  <Select
-                    value={settings.sortOrder}
-                    onValueChange={(value: any) =>
-                      setSettings({ ...settings, sortOrder: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="asc">По возрастанию</SelectItem>
-                      <SelectItem value="desc">По убыванию</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Быстрое перемещение</h3>
-                <div className="space-y-2">
-                  <Label>Папка для свайпа вверх</Label>
-                  <Select
-                    value={settings.swipeUpFolder}
-                    onValueChange={(value) =>
-                      setSettings({ ...settings, swipeUpFolder: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Best">Best</SelectItem>
-                      <SelectItem value="Favorites">Favorites</SelectItem>
-                      <SelectItem value="Archive">Archive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Папка для свайпа вниз</Label>
-                  <Select
-                    value={settings.swipeDownFolder}
-                    onValueChange={(value) =>
-                      setSettings({ ...settings, swipeDownFolder: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Bad">Bad</SelectItem>
-                      <SelectItem value="Delete">Delete</SelectItem>
-                      <SelectItem value="Trash">Trash</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Слайдшоу</h3>
-                <div className="space-y-2">
-                  <Label>Длительность показа (сек)</Label>
-                  <Select
-                    value={String(settings.slideshowDuration)}
-                    onValueChange={(value) =>
-                      setSettings({ ...settings, slideshowDuration: Number(value) })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2 секунды</SelectItem>
-                      <SelectItem value="3">3 секунды</SelectItem>
-                      <SelectItem value="5">5 секунд</SelectItem>
-                      <SelectItem value="10">10 секунд</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 };
