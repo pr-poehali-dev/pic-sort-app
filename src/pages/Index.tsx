@@ -84,6 +84,9 @@ const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [exifDialogOpen, setExifDialogOpen] = useState(false);
+  const [slideshowActive, setSlideshowActive] = useState(false);
+  const [slideshowImages, setSlideshowImages] = useState<MediaItem[]>([]);
+  const [slideshowIndex, setSlideshowIndex] = useState(0);
 
   useEffect(() => {
     loadMockData();
@@ -229,12 +232,13 @@ const Index = () => {
   const handleSwipeMove = (direction: 'up' | 'down') => {
     if (currentImage) {
       const targetFolder = direction === 'up' ? settings.swipeUpFolder : settings.swipeDownFolder;
-      console.log(`Moving ${currentImage.name} to ${targetFolder}`);
+      alert(`Файл "${currentImage.name}" перемещён в папку "${targetFolder}"`);
       
       const images = mediaItems.filter(item => item.type === 'image');
       const currentIndex = images.findIndex(item => item.id === currentImage.id);
       if (currentIndex < images.length - 1) {
         setCurrentImage(images[currentIndex + 1]);
+        setZoomLevel(1);
       } else {
         setViewerOpen(false);
       }
@@ -267,6 +271,55 @@ const Index = () => {
       hasNext: currentIndex < images.length - 1,
     };
   };
+
+  const startSlideshow = (images: MediaItem[]) => {
+    if (images.length === 0) return;
+    
+    let sortedImages = [...images];
+    if (settings.slideshowRandom) {
+      sortedImages = sortedImages.sort(() => Math.random() - 0.5);
+    }
+    
+    setSlideshowImages(sortedImages);
+    setSlideshowIndex(0);
+    setCurrentImage(sortedImages[0]);
+    setViewerOpen(true);
+    setSlideshowActive(true);
+    setZoomLevel(1);
+  };
+
+  const stopSlideshow = () => {
+    setSlideshowActive(false);
+  };
+
+  useEffect(() => {
+    if (!slideshowActive || !viewerOpen) return;
+
+    const timer = setTimeout(() => {
+      const nextIndex = slideshowIndex + 1;
+      
+      if (nextIndex < slideshowImages.length) {
+        setSlideshowIndex(nextIndex);
+        setCurrentImage(slideshowImages[nextIndex]);
+        setZoomLevel(1);
+      } else if (settings.slideshowLoop) {
+        setSlideshowIndex(0);
+        setCurrentImage(slideshowImages[0]);
+        setZoomLevel(1);
+      } else {
+        setSlideshowActive(false);
+        setViewerOpen(false);
+      }
+    }, settings.slideshowDuration * 1000);
+
+    return () => clearTimeout(timer);
+  }, [slideshowActive, slideshowIndex, slideshowImages, settings.slideshowDuration, settings.slideshowLoop, viewerOpen]);
+
+  useEffect(() => {
+    if (!viewerOpen) {
+      setSlideshowActive(false);
+    }
+  }, [viewerOpen]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -320,6 +373,7 @@ const Index = () => {
         onSwipeMove={handleSwipeMove}
         onNavigate={handleNavigate}
         {...getNavigationStatus()}
+        slideshowActive={slideshowActive}
       />
 
       <MenuSheet
@@ -329,6 +383,18 @@ const Index = () => {
         onShowExif={() => setExifDialogOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenSort={() => setSortOpen(true)}
+        onStartSlideshowAll={() => {
+          const images = mediaItems.filter(item => item.type === 'image');
+          startSlideshow(images);
+          setMenuOpen(false);
+        }}
+        onStartSlideshowSelected={() => {
+          const images = mediaItems.filter(item => 
+            item.type === 'image' && selectedItems.has(item.id)
+          );
+          startSlideshow(images);
+          setMenuOpen(false);
+        }}
       />
 
       <SortSheet

@@ -34,6 +34,7 @@ interface ImageViewerProps {
   onNavigate: (direction: 'prev' | 'next') => void;
   hasPrev: boolean;
   hasNext: boolean;
+  slideshowActive?: boolean;
 }
 
 export const ImageViewer = ({
@@ -46,6 +47,7 @@ export const ImageViewer = ({
   onNavigate,
   hasPrev,
   hasNext,
+  slideshowActive = false,
 }: ImageViewerProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,6 +78,12 @@ export const ImageViewer = ({
             >
               <Icon name="ChevronRight" size={32} />
             </Button>
+            {slideshowActive && (
+              <div className="absolute top-4 left-4 bg-destructive/90 backdrop-blur rounded-full px-4 py-2 text-white font-medium">
+                <Icon name="Play" size={16} className="inline mr-2" />
+                Слайд-шоу
+              </div>
+            )}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-card/90 backdrop-blur rounded-full px-4 py-2">
               <Button
                 variant="ghost"

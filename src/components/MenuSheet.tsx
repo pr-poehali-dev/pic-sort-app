@@ -10,6 +10,8 @@ interface MenuSheetProps {
   onShowExif: () => void;
   onOpenSettings: () => void;
   onOpenSort: () => void;
+  onStartSlideshowAll: () => void;
+  onStartSlideshowSelected: () => void;
 }
 
 export const MenuSheet = ({
@@ -19,6 +21,8 @@ export const MenuSheet = ({
   onShowExif,
   onOpenSettings,
   onOpenSort,
+  onStartSlideshowAll,
+  onStartSlideshowSelected,
 }: MenuSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -36,7 +40,7 @@ export const MenuSheet = ({
             <Icon name="Info" size={20} className="mr-2" />
             Показать EXIF
           </Button>
-          <Button variant="ghost" className="justify-start">
+          <Button variant="ghost" className="justify-start" onClick={onStartSlideshowAll}>
             <Icon name="Play" size={20} className="mr-2" />
             Слайдшоу (текущая папка)
           </Button>
@@ -44,6 +48,7 @@ export const MenuSheet = ({
             variant="ghost"
             className="justify-start"
             disabled={selectedItemsCount === 0}
+            onClick={onStartSlideshowSelected}
           >
             <Icon name="PlaySquare" size={20} className="mr-2" />
             Слайдшоу (выбранные)

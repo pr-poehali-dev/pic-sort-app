@@ -1,0 +1,18 @@
+{
+  "name": "PicSort - Photo Gallery",
+  "short_name": "PicSort",
+  "description": "Просмотр и сортировка фотогалереи",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/c4c14a81-be03-4b76-86a2-2b960c109aac/files/cae2edad-5408-496c-b9d2-c61f125a1287.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
