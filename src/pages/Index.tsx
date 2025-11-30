@@ -230,18 +230,22 @@ const Index = () => {
   };
 
   const handleSwipeMove = (direction: 'up' | 'down') => {
-    if (currentImage) {
-      const targetFolder = direction === 'up' ? settings.swipeUpFolder : settings.swipeDownFolder;
-      alert(`Файл "${currentImage.name}" перемещён в папку "${targetFolder}"`);
-      
-      const images = mediaItems.filter(item => item.type === 'image');
-      const currentIndex = images.findIndex(item => item.id === currentImage.id);
-      if (currentIndex < images.length - 1) {
-        setCurrentImage(images[currentIndex + 1]);
-        setZoomLevel(1);
-      } else {
-        setViewerOpen(false);
-      }
+    if (!currentImage) return;
+
+    const targetFolder = direction === 'up' ? settings.swipeUpFolder : settings.swipeDownFolder;
+    
+    const updatedItems = mediaItems.filter(item => item.id !== currentImage.id);
+    setMediaItems(updatedItems);
+    
+    const images = updatedItems.filter(item => item.type === 'image');
+    const currentIndex = images.findIndex(item => item.id === currentImage.id);
+    
+    if (images.length > 0) {
+      const nextIndex = currentIndex >= 0 && currentIndex < images.length ? currentIndex : 0;
+      setCurrentImage(images[nextIndex]);
+      setZoomLevel(1);
+    } else {
+      setViewerOpen(false);
     }
   };
 
