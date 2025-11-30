@@ -31,6 +31,9 @@ interface ImageViewerProps {
   zoomLevel: number;
   onZoom: (delta: number) => void;
   onSwipeMove: (direction: 'up' | 'down') => void;
+  onNavigate: (direction: 'prev' | 'next') => void;
+  hasPrev: boolean;
+  hasNext: boolean;
 }
 
 export const ImageViewer = ({
@@ -40,6 +43,9 @@ export const ImageViewer = ({
   zoomLevel,
   onZoom,
   onSwipeMove,
+  onNavigate,
+  hasPrev,
+  hasNext,
 }: ImageViewerProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,6 +58,24 @@ export const ImageViewer = ({
               className="max-w-full max-h-full object-contain"
               style={{ transform: `scale(${zoomLevel})` }}
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-card/90 backdrop-blur"
+              onClick={() => onNavigate('prev')}
+              disabled={!hasPrev}
+            >
+              <Icon name="ChevronLeft" size={32} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-card/90 backdrop-blur"
+              onClick={() => onNavigate('next')}
+              disabled={!hasNext}
+            >
+              <Icon name="ChevronRight" size={32} />
+            </Button>
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-card/90 backdrop-blur rounded-full px-4 py-2">
               <Button
                 variant="ghost"

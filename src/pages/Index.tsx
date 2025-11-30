@@ -9,6 +9,7 @@ import { MediaGrid } from '@/components/MediaGrid';
 import { ImageViewer } from '@/components/ImageViewer';
 import { MenuSheet } from '@/components/MenuSheet';
 import { SettingsSheet } from '@/components/SettingsSheet';
+import { SortSheet } from '@/components/SortSheet';
 
 type MediaType = 'image' | 'video' | 'folder';
 
@@ -32,13 +33,23 @@ interface MediaItem {
 }
 
 interface Settings {
+  scanFolders: string[];
+  ignoreFolders: string[];
   showVideoFiles: boolean;
   showFileNames: boolean;
-  sortBy: 'name' | 'date' | 'path';
-  sortOrder: 'asc' | 'desc';
+  defaultSortBy: 'name' | 'date' | 'path';
+  defaultSortOrder: 'asc' | 'desc';
+  checkerboardAlpha: boolean;
   swipeUpFolder: string;
   swipeDownFolder: string;
+  screenOrientation: 'system' | 'sensor' | 'image-size';
   slideshowDuration: number;
+  slideshowAnimation: 'fade' | 'slide' | 'zoom' | 'none';
+  slideshowLoop: boolean;
+  slideshowRandom: boolean;
+  slideshowMaxBrightness: boolean;
+  cacheFullscreen: boolean;
+  videoPlayer: string;
 }
 
 const Index = () => {
@@ -48,22 +59,35 @@ const Index = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState<MediaItem | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'path'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [settings, setSettings] = useState<Settings>({
+    scanFolders: ['/DCIM', '/Pictures'],
+    ignoreFolders: ['/.thumbnails', '/.cache'],
     showVideoFiles: true,
     showFileNames: true,
-    sortBy: 'name',
-    sortOrder: 'asc',
+    defaultSortBy: 'name',
+    defaultSortOrder: 'asc',
+    checkerboardAlpha: false,
     swipeUpFolder: 'Best',
     swipeDownFolder: 'Bad',
+    screenOrientation: 'system',
     slideshowDuration: 3,
+    slideshowAnimation: 'fade',
+    slideshowLoop: false,
+    slideshowRandom: false,
+    slideshowMaxBrightness: false,
+    cacheFullscreen: true,
+    videoPlayer: 'default',
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [exifDialogOpen, setExifDialogOpen] = useState(false);
 
   useEffect(() => {
     loadMockData();
-  }, [currentPath, settings.sortBy, settings.sortOrder, settings.showVideoFiles]);
+  }, [currentPath, sortBy, sortOrder, settings.showVideoFiles]);
 
   const loadMockData = () => {
     const mockData: MediaItem[] = [
@@ -150,15 +174,15 @@ const Index = () => {
       if (a.type !== 'folder' && b.type === 'folder') return 1;
 
       let comparison = 0;
-      if (settings.sortBy === 'name') {
+      if (sortBy === 'name') {
         comparison = a.name.localeCompare(b.name);
-      } else if (settings.sortBy === 'date') {
+      } else if (sortBy === 'date') {
         comparison = (a.date || '').localeCompare(b.date || '');
-      } else if (settings.sortBy === 'path') {
+      } else if (sortBy === 'path') {
         comparison = a.path.localeCompare(b.path);
       }
 
-      return settings.sortOrder === 'asc' ? comparison : -comparison;
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
 
     setMediaItems(filtered);
@@ -207,18 +231,41 @@ const Index = () => {
       const targetFolder = direction === 'up' ? settings.swipeUpFolder : settings.swipeDownFolder;
       console.log(`Moving ${currentImage.name} to ${targetFolder}`);
       
-      const currentIndex = mediaItems.findIndex(item => item.id === currentImage.id);
-      if (currentIndex < mediaItems.length - 1) {
-        const nextImage = mediaItems[currentIndex + 1];
-        if (nextImage.type === 'image') {
-          setCurrentImage(nextImage);
-        } else {
-          setViewerOpen(false);
-        }
+      const images = mediaItems.filter(item => item.type === 'image');
+      const currentIndex = images.findIndex(item => item.id === currentImage.id);
+      if (currentIndex < images.length - 1) {
+        setCurrentImage(images[currentIndex + 1]);
       } else {
         setViewerOpen(false);
       }
     }
+  };
+
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (!currentImage) return;
+    
+    const images = mediaItems.filter(item => item.type === 'image');
+    const currentIndex = images.findIndex(item => item.id === currentImage.id);
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      setCurrentImage(images[currentIndex - 1]);
+      setZoomLevel(1);
+    } else if (direction === 'next' && currentIndex < images.length - 1) {
+      setCurrentImage(images[currentIndex + 1]);
+      setZoomLevel(1);
+    }
+  };
+
+  const getNavigationStatus = () => {
+    if (!currentImage) return { hasPrev: false, hasNext: false };
+    
+    const images = mediaItems.filter(item => item.type === 'image');
+    const currentIndex = images.findIndex(item => item.id === currentImage.id);
+    
+    return {
+      hasPrev: currentIndex > 0,
+      hasNext: currentIndex < images.length - 1,
+    };
   };
 
   return (
@@ -271,6 +318,8 @@ const Index = () => {
         zoomLevel={zoomLevel}
         onZoom={handleZoom}
         onSwipeMove={handleSwipeMove}
+        onNavigate={handleNavigate}
+        {...getNavigationStatus()}
       />
 
       <MenuSheet
@@ -279,6 +328,18 @@ const Index = () => {
         selectedItemsCount={selectedItems.size}
         onShowExif={() => setExifDialogOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSort={() => setSortOpen(true)}
+      />
+
+      <SortSheet
+        open={sortOpen}
+        onOpenChange={setSortOpen}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={(newSortBy, newSortOrder) => {
+          setSortBy(newSortBy);
+          setSortOrder(newSortOrder);
+        }}
       />
 
       <SettingsSheet

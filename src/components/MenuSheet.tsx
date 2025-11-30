@@ -9,6 +9,7 @@ interface MenuSheetProps {
   selectedItemsCount: number;
   onShowExif: () => void;
   onOpenSettings: () => void;
+  onOpenSort: () => void;
 }
 
 export const MenuSheet = ({
@@ -17,6 +18,7 @@ export const MenuSheet = ({
   selectedItemsCount,
   onShowExif,
   onOpenSettings,
+  onOpenSort,
 }: MenuSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -72,6 +74,17 @@ export const MenuSheet = ({
             Удалить выбранные
           </Button>
           <Separator className="my-2" />
+          <Button
+            variant="ghost"
+            className="justify-start"
+            onClick={() => {
+              onOpenChange(false);
+              onOpenSort();
+            }}
+          >
+            <Icon name="ArrowUpDown" size={20} className="mr-2" />
+            Сортировка
+          </Button>
           <Button
             variant="ghost"
             className="justify-start"

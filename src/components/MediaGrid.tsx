@@ -50,12 +50,7 @@ export const MediaGrid = ({
             onLongPress(item.id);
           }}
         >
-          <div
-            className="relative bg-card border border-border rounded-lg overflow-hidden"
-            style={{
-              paddingBottom: `${(1 / item.aspectRatio) * 100}%`,
-            }}
-          >
+          <div className="relative bg-card border border-border rounded-lg overflow-hidden h-48">
             {item.type === 'folder' ? (
               <div className="absolute inset-0 flex items-center justify-center bg-secondary">
                 <Icon name="Folder" size={48} className="text-primary" />
@@ -65,7 +60,7 @@ export const MediaGrid = ({
                 <img
                   src={item.thumbnail}
                   alt={item.name}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
                 {item.type === 'video' && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
